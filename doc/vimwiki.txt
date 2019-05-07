@@ -57,7 +57,7 @@ CONTENTS                                                             *vimwiki*
 ==============================================================================
 1. Intro                                                       *vimwiki-intro*
 
-Vimwiki makes it very easy for you create a personal wiki using the Vim text
+Vimwiki makes it very easy for you create a personal wiki using the Vim 
 editor. A wiki is a collection of text documents linked together and formatted
 with wiki or markdown syntax that can be highlighted for readability using
 Vim's syntax highlighting feature.
@@ -69,15 +69,13 @@ With Vimwiki you can:
     - maintain a diary
     - export your documents to HTML
 
-Getting started with Vimwiki is easy. Once intalled, simply type in `vim` into
-your terminal to launch Vim and then type <Leader>ww (the <Leader> key is `\`
-by default) to create or open the index wiki file, the "top" page in your
-hierarchical collection of wiki pages. By default, this page will be located
-at ~/vimwiki/index.wiki.
+To get started, open a new vim session and type <Leader>ww (the <Leader> key
+is `\` by default) to create or open the index wiki file, the "top" page in
+your hierarchical collection of wiki pages. By default, this page will be
+located at ~/vimwiki/index.wiki.
 
-Now add the following example lines to the document:
-
-= My knowledge base =
+Now add the following example lines to the document: >
+= My knowledge base = 
     * Tasks -- things to be done _yesterday_!!!
     * Project Gutenberg -- good books are power.
     * Scratchpad -- various temporary stuff.
@@ -93,8 +91,7 @@ A Vimwiki link can contain multiple words by entering Vim's "visual" mode (the
 press `Enter`.
 
 Try this now by selecting 'Project Gutenberg' in visual mode and hitting
-`Enter`. The sample text should now look something like this:
-
+`Enter`. The sample text should now look something like this: >
 = My knowledge base =
     * [[Tasks]] -- things to be done _yesterday_!!!
     * [[Project Gutenberg]] -- good books are power.
