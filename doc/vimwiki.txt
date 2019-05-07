@@ -107,13 +107,11 @@ documents to help you organize your notes, documenation, and tasks.
 ==============================================================================
 2. Prerequisites                                       *vimwiki-prerequisites*
 
-Make sure you have these settings in your vimrc file: >
+Ensure your vimrc file contains these settings or Vimwiki will not work: >
     set nocompatible
     filetype plugin on
     syntax on
-
-Without them Vimwiki will not work properly.
-
+<
 
 ==============================================================================
 3. Mappings                                                 *vimwiki-mappings*
