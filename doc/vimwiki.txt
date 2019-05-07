@@ -69,10 +69,10 @@ With Vimwiki you can:
     - maintain a diary
     - export your documents to HTML
 
-To get started, open a new vim session and type <Leader>ww (the <Leader> key
-is `\` by default) to create or open the index wiki file, the "top" page in
-your hierarchical collection of wiki pages. By default, this page will be
-located at ~/vimwiki/index.wiki.
+To get started, ensure the `vimwiki-prerequisites` are met and open a new vim
+session. Type <Leader>ww (the <Leader> key is `\` by default) to create or
+open the index wiki file, the "top" page in your hierarchical collection of
+wiki pages. By default, this page will be located at ~/vimwiki/index.wiki.
 
 Now add the following example lines to the document: >
 = My knowledge base = 
