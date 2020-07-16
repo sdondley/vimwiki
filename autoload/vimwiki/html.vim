@@ -152,7 +152,7 @@ endfunction
 
 
 function! s:delete_html_files(path) abort
-  let htmlfiles = split(glob(a:path.'**/*.html'), '\n')
+  let htmlfiles = split(glob(a:path.'**/*.md'), '\n')
   for fname in htmlfiles
     " ignore user html files, e.g. search.html,404.html
     if stridx(vimwiki#vars#get_global('user_htmls'), fnamemodify(fname, ':t')) >= 0
