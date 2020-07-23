@@ -1,5 +1,107 @@
 Include: vader_includes/vader_setup.vader
 
+# Absolute links {{{1
+####################
+
+Execute (Log):
+  Log 'Absolute links'
+
+# For markdown {{{2
+# ------------------
+
+Execute (Set filename wiki_test.md):
+  Log '>> Absolute link, markdown syntax'
+  file wiki_test.md
+  call SetSyntax('markdown')
+
+Given vimwiki(some wiki link):
+  [test1](//$HOME/in_home1)
+  [test2](//~/in_home2)
+  [test3](///tmp/in_tmp)
+
+Do (Check in_home1):
+  \<Cr>
+  :AssertEqual expand('%'), $HOME.'/in_home1.md'\<Cr>
+
+Do (Check in_home2):
+  j\<Cr>
+  :AssertEqual expand('%'), $HOME.'/in_home2.md'\<Cr>
+
+Do (Check in_tmp):
+  jj\<Cr>
+  :AssertEqual expand('%'), '/tmp/in_tmp.md'\<Cr>
+
+# For Wiki {{{2
+# ------------------
+
+Execute (Set filename wiki_test.wiki):
+  Log '>> Absolute link, wiki syntax'
+  file wiki_test.wiki
+  call SetSyntax('default')
+
+Given vimwiki(some wiki link):
+  [[//$HOME/in_home1]]
+  [[//~/in_home2]]
+  [[///tmp/in_tmp]]
+
+Do (Check in_home1):
+  \<Cr>
+  :AssertEqual expand('%'), $HOME.'/in_home1.wiki'\<Cr>
+
+Do (Check in_home2):
+  j\<Cr>
+  :AssertEqual expand('%'), $HOME.'/in_home2.wiki'\<Cr>
+
+Do (Check in_tmp):
+  jj\<Cr>
+  :AssertEqual expand('%'), '/tmp/in_tmp.wiki'\<Cr>
+
+
+# Link with dot {{{1
+####################
+
+Execute (Log):
+  Log 'Link  with dot'
+
+Given vimwiki (filnames with dots):
+  part1.part2.part3
+  part1.part2.part3.md
+  noext
+
+Execute (Set filename wiki_test.md):
+  file wiki_test.md
+  call SetSyntax('markdown')
+
+Do (Linkify all):
+  \<Cr>
+  j\<Cr>
+  j\<Cr>
+
+Expect (Full Words are made as links, no extension addded . -> space):
+  [part1 part2 part3](part1.part2.part3)
+  [part1 part2 part3](part1.part2.part3.md)
+  [noext](noext)
+
+Given vimwiki (filnames with dots):
+  part1.part2.part3
+  part1.part2.part3.md
+  noext
+
+Do (Fllow link witout markdown):
+  \<Cr>\<Cr>
+  :AssertEqual  expand('%:t'), 'part1.part2.part3'\<Cr>
+
+Do (j<Cr><Cr>):
+  j\<Cr>\<Cr>
+  :AssertEqual  expand('%:t'), 'part1.part2.part3.md'\<Cr>
+
+
+# Rest {{{1
+##########################
+
+Execute (Log):
+  Log 'And more'
+
 Given vimwiki (Text that is not a wikilink):
   test
   www.google.com
@@ -123,3 +225,4 @@ Expect (Mediawiki links):
   [[file.mw]]
 
 Include: vader_includes/vader_teardown.vader
+# vim: foldmethod=marker foldlevel=30
