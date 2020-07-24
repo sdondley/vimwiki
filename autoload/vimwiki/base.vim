@@ -249,7 +249,7 @@ function! vimwiki#base#resolve_link(link_text, ...) abort
       endif
     else
       let ext = fnamemodify(link_text, ':e')
-      if ext ==? ''  " append ext iff one not already present
+      if ext !=? 'md'  " append ext iff one not already present
         let link_infos.filename .= vimwiki#vars#get_wikilocal('ext', link_infos.index)
       endif
     endif
