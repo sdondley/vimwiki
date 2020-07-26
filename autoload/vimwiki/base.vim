@@ -1308,7 +1308,6 @@ function! vimwiki#base#update_listing_in_buffer(Generator, start_header,
   let lines_diff += 1
   if vimwiki#vars#get_wikilocal('syntax') ==# 'markdown'
     for _ in range(vimwiki#vars#get_global('markdown_header_style'))
-      keepjumps call append(start_lnum - 1, '')
       let start_lnum += 1
       let lines_diff += 1
     endfor
