@@ -429,11 +429,7 @@ function! vimwiki#base#generate_links(create, ...) abort
     for link in links
       let link_infos = vimwiki#base#resolve_link(link)
       if !vimwiki#base#is_diary_file(link_infos.filename, copy(l:diary_file_paths))
-        if vimwiki#vars#get_wikilocal('syntax') ==# 'markdown'
-          let link_tpl = vimwiki#vars#get_syntaxlocal('Weblink1Template')
-        else
-          let link_tpl = vimwiki#vars#get_global('WikiLinkTemplate1')
-        endif
+        let link_tpl = vimwiki#vars#get_syntaxlocal('Link1')
 
         let link_caption = vimwiki#base#read_caption(link_infos.filename)
         if link_caption ==? '' " default to link if caption not found
@@ -572,10 +568,6 @@ function! vimwiki#base#get_wikilinks(wiki_nr, also_absolute_links, pattern) abor
   let result = []
   for wikifile in files
     let wikifile = fnamemodify(wikifile, ':r') " strip extension
-    if vimwiki#u#is_windows()
-      " TODO temporary fix see #478
-      let wikifile = substitute(wikifile , '/', '\', 'g')
-    endif
     let wikifile = vimwiki#path#relpath(cwd, wikifile)
     call add(result, wikifile)
   endfor
@@ -587,10 +579,6 @@ function! vimwiki#base#get_wikilinks(wiki_nr, also_absolute_links, pattern) abor
         let cwd = vimwiki#vars#get_wikilocal('path') . vimwiki#vars#get_wikilocal('diary_rel_path')
       endif
       let wikifile = fnamemodify(wikifile, ':r') " strip extension
-      if vimwiki#u#is_windows()
-        " TODO temporary fix see #478
-        let wikifile = substitute(wikifile , '/', '\', 'g')
-      endif
       let wikifile = '/'.vimwiki#path#relpath(cwd, wikifile)
       call add(result, wikifile)
     endfor
@@ -1235,12 +1223,12 @@ endfunction
 " Called: by functions adding listing to buffer (this is an util function)
 function! vimwiki#base#update_listing_in_buffer(Generator, start_header,
       \ content_regex, default_lnum, header_level, create) abort
-  " Vim behaves strangely when files change while in diff mode
+  " Clause: Vim behaves strangely when files change while in diff mode
   if &diff || &readonly
     return
   endif
 
-  " Check if the listing is already there
+  " Clause: Check if the listing is already there
   let already_there = 0
 
   let header_level = 'rxH' . a:header_level . '_Template'
@@ -1260,17 +1248,21 @@ function! vimwiki#base#update_listing_in_buffer(Generator, start_header,
     return
   endif
 
+  " Save state
   let winview_save = winsaveview()
+  " Work is supposing an initial visibility (Issue: #921)
+  let foldlevel_save = &l:foldlevel
+  let &l:foldlevel = 100
   let cursor_line = winview_save.lnum
   let is_cursor_after_listing = 0
 
   let is_fold_closed = 1
-
   let lines_diff = 0
 
+  " Set working range according to listing presence
   if already_there
     let is_fold_closed = ( foldclosed(start_lnum) > -1 )
-    " delete the old listing
+    " Delete the old listing
     let whitespaces_in_first_line = matchstr(getline(start_lnum), '\m^\s*')
     let end_lnum = start_lnum + 1
     while end_lnum <= line('$') && getline(end_lnum) =~# a:content_regex
@@ -1290,7 +1282,7 @@ function! vimwiki#base#update_listing_in_buffer(Generator, start_header,
     let start_lnum = a:default_lnum
     let is_cursor_after_listing = ( cursor_line > a:default_lnum )
     let whitespaces_in_first_line = ''
-    " append newline if not replacing first line
+    " Append newline if not replacing first line
     if start_lnum > 1
       keepjumps call append(start_lnum -1, '')
       let start_lnum += 1
@@ -1335,6 +1327,9 @@ function! vimwiki#base#update_listing_in_buffer(Generator, start_header,
   if is_cursor_after_listing
     let winview_save.lnum += lines_diff
   endif
+
+  " Restore state
+  let &l:foldlevel = foldlevel_save
   call winrestview(winview_save)
 endfunction
 
@@ -2259,10 +2254,10 @@ endfunction
 
 
 " Treat link string towards normalization
-" [__LinkDescription__](__LinkUrl__.FileExtension)
+" [__LinkDescription__](__LinkUrl__.__FileExtension__)
 function! vimwiki#base#normalize_link_helper(str, rxUrl, rxDesc, template) abort
   let url = matchstr(a:str, a:rxUrl)
-  if vimwiki#vars#get_wikilocal('syntax') ==# 'markdown' && vimwiki#vars#get_global('markdown_link_ext')
+  if vimwiki#vars#get_wikilocal('syntax') ==# 'markdown' && vimwiki#vars#get_wikilocal('markdown_link_ext')
     " Strip the extension if it exists so it doesn't get added multiple times
     let url = substitute(url, '\'.vimwiki#vars#get_wikilocal('ext').'$', '', '')
   endif
@@ -2291,6 +2286,7 @@ endfunction
 
 
 " Normalize link in a diary file
+" Refactor: in diary
 function! vimwiki#base#normalize_link_in_diary(lnk) abort
   let sc = vimwiki#vars#get_wikilocal('links_space_char')
   let link = a:lnk . vimwiki#vars#get_wikilocal('ext')
@@ -2320,7 +2316,7 @@ function! vimwiki#base#normalize_link_in_diary(lnk) abort
   endif
 
   if vimwiki#vars#get_wikilocal('syntax') ==? 'markdown'
-    let template = vimwiki#vars#get_syntaxlocal('Weblink1Template')
+    let template = vimwiki#vars#get_syntaxlocal('Link1')
   endif
 
   return vimwiki#base#normalize_link_helper(str, rxUrl, rxDesc, template)
@@ -2379,50 +2375,48 @@ endfunction
 " TODO mutualize most code with syntax_n
 " Normalize link in visual mode Enter keypress
 function! s:normalize_link_syntax_v() abort
-  let sel_save = &selection
-  let &selection = 'old'
-  let default_register_save = @"
-  let registertype_save = getregtype('"')
+  " Get selection content
+  let visual_selection = vimwiki#u#get_selection()
 
-  try
-    " Save selected text to register "
-    normal! gv""y
+  " Embed link in template
+  " In case of a diary link, wiki or markdown link
+  if vimwiki#base#is_diary_file(expand('%:p'))
+    let link = vimwiki#base#normalize_link_in_diary(visual_selection)
+  else
+    let link_tpl = vimwiki#vars#get_syntaxlocal('Link1')
+    let link = s:safesubstitute(link_tpl, '__LinkUrl__', visual_selection, '')
+  endif
 
-    " Set substitution
-    " Replace Url
-    if vimwiki#base#is_diary_file(expand('%:p'))
-      let sub = vimwiki#base#normalize_link_in_diary(@")
-    else
-      let sub = s:safesubstitute(vimwiki#vars#get_global('WikiLinkTemplate1'),
-            \ '__LinkUrl__', @", '')
-    endif
-    " Replace file extension
-    let file_extension = vimwiki#vars#get_wikilocal('ext', vimwiki#vars#get_bufferlocal('wiki_nr'))
-    let sub = s:safesubstitute(sub, '__FileExtension__', file_extension , '')
+  " Transform link:
+  " Replace description (used for markdown)
+  let link = s:safesubstitute(link, '__LinkDescription__', visual_selection, '')
+  " Replace file extension
+  let file_extension = vimwiki#vars#get_wikilocal('ext', vimwiki#vars#get_bufferlocal('wiki_nr'))
+  let link = s:safesubstitute(link, '__FileExtension__', file_extension , '')
+  " Replace space characters
+  let sc = vimwiki#vars#get_wikilocal('links_space_char')
+  let link = substitute(link, '\s', sc, 'g')
+  " Remove newlines
+  let link = substitute(link, '\n', '', '')
 
-    " Put substitution in register " and change text
-    let sc = vimwiki#vars#get_wikilocal('links_space_char')
-    call setreg('"', substitute(substitute(sub, '\n', '', ''), '\s', sc, 'g'), visualmode())
-    normal! `>""pgvd
-  finally
-    call setreg('"', default_register_save, registertype_save)
-    let &selection = sel_save
-  endtry
+  " Paste result
+  call vimwiki#u#get_selection(link)
 endfunction
 
 
-" Normalize link
+" Normalize link (Implemented as a switch function)
 function! vimwiki#base#normalize_link(is_visual_mode) abort
-  if exists('*vimwiki#'.vimwiki#vars#get_wikilocal('syntax').'_base#normalize_link')
-    " Syntax-specific links
-    call vimwiki#{vimwiki#vars#get_wikilocal('syntax')}_base#normalize_link(a:is_visual_mode)
+  " If visual mode
+  if a:is_visual_mode
+    return s:normalize_link_syntax_v()
+
+  " If Syntax-specific normalizer exists: call it
+  elseif exists('*vimwiki#'.vimwiki#vars#get_wikilocal('syntax').'_base#normalize_link')
+    return vimwiki#{vimwiki#vars#get_wikilocal('syntax')}_base#normalize_link()
+
+  " Normal mode default
   else
-    if !a:is_visual_mode
-      call s:normalize_link_syntax_n()
-    elseif line("'<") == line("'>")
-      " action undefined for multi-line visual mode selections
-      call s:normalize_link_syntax_v()
-    endif
+    return s:normalize_link_syntax_n()
   endif
 endfunction
 

@@ -1,5 +1,144 @@
 Include: vader_includes/vader_setup.vader
 
+# Link Normalisation {{{1
+# And configuration
+# Issues: #892
+####################
+
+Execute (Log):
+  Log 'Markdown change Link1 : Pressing enter to create a [[double bracket]] #892'
+
+Given vimwiki (abc def ghi jkl):
+  abc def ghi jkl
+
+Execute (Set filename wiki_test.md):
+  call SetSyntax('markdown')
+  let save_link = g:vimwiki_syntax_variables.markdown.Link1
+  let g:vimwiki_syntax_variables.markdown.Link1 = vimwiki#vars#get_global('WikiLinkTemplate1')
+
+Do (vee<CR>):
+  vee\<CR>
+
+Expect (append md suffix):
+  [[abc def]] ghi jkl
+
+Execute (restore):
+  let g:vimwiki_syntax_variables.markdown.Link1 = save_link
+
+
+# vimwiki_markdown_link_ext {{{1
+####################
+
+Execute (Log):
+  Log 'vimwiki_markdown_link_ext'
+
+Given vimwiki (abc def ghi jkl):
+  abc def ghi jkl
+
+Execute (Set filename wiki_test.md):
+  Log '>> Visual creation, markdown syntax'
+  file wiki_test.md
+  let g:vimwiki_markdown_link_ext = 1
+  call ReloadVars()
+  call SetSyntax('markdown')
+  AssertEqual vimwiki#vars#get_wikilocal('syntax'), 'markdown'
+  AssertEqual vimwiki#vars#get_wikilocal('markdown_link_ext'), 1
+
+Do (vee<CR>):
+  vee\<CR>
+
+Expect (append md suffix):
+  [abc def](abc def.md) ghi jkl
+
+Execute (Restore variable g:vimwiki_markdown_link_ext):
+  unlet g:vimwiki_markdown_link_ext
+  call ReloadVars()
+
+
+# Visual Creation {{{1
+# Issues: #382
+####################
+
+Execute (Log):
+  Log 'Visual Creation'
+
+# For markdown {{{2
+# ------------------
+
+Given vimwiki (abc def ghi jkl):
+  abc def ghi jkl
+
+Execute (Set filename wiki_test.md):
+  Log '>> Visual creation, markdown syntax'
+  file wiki_test.md
+  call SetSyntax('markdown')
+  AssertEqual vimwiki#vars#get_wikilocal('syntax'), 'markdown'
+
+Do (v3e):
+  v3e\<Cr>
+
+Expect (3 Words []()):
+  [abc def ghi](abc def ghi) jkl
+
+Do (v3e):
+  wv2e\<Cr>
+
+Expect (2 Words []()):
+  abc [def ghi](def ghi) jkl
+
+Do (selection=exclusive v3e):
+  :set selection=exclusive\<Cr>
+  wv2e\<Cr>
+
+Expect (2 Words []()):
+  abc [def ghi](def ghi) jkl
+
+Do (selection=exclusive wv$):
+  :set selection=exclusive\<Cr>
+  wv$\<Cr>
+
+Expect (3 Words []()):
+  abc [def ghi jkl](def ghi jkl)
+
+
+# For Wiki {{{2
+# ------------------
+
+Given vimwiki (abc def ghi jkl):
+  abc def ghi jkl
+
+Execute (Set filename wiki_test.md):
+  Log '>> Visual creation, wiki syntax'
+  file wiki_test.wiki
+  call SetSyntax('default')
+
+Do (v3e):
+  v3e\<Cr>
+
+Expect (3 Words []()):
+  [[abc def ghi]] jkl
+
+Do (v3e):
+  wv2e\<Cr>
+
+Expect (2 Words []()):
+  abc [[def ghi]] jkl
+
+Do (selection=exclusive v3e):
+  :set selection=exclusive\<Cr>
+  wv2e\<Cr>
+
+Expect (2 Words []()):
+  abc [[def ghi]] jkl
+
+Do (selection=exclusive wv$):
+  :set selection=exclusive\<Cr>
+  wv$\<Cr>
+
+Expect (3 Words []()):
+  abc [[def ghi jkl]]
+
+
 # Absolute links {{{1
 ####################
 
