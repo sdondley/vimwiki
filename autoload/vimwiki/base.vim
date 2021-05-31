@@ -2245,9 +2245,11 @@ endfunction
 " An optional second argument allows you to pass in a list of diary files rather
 " than generating a list on each call to the function.
 function! vimwiki#base#is_diary_file(filename, ...) abort
+"  echo a:filename
   let l:diary_file_paths = a:0 > 0 ? a:1 : vimwiki#diary#get_diary_files()
   let l:normalised_file_paths =
         \ map(l:diary_file_paths, 'vimwiki#path#normalize(v:val)')
+"  echo l:normalised_file_paths
   let l:matching_files =
         \ filter(l:normalised_file_paths, 'v:val =~# a:filename')
   return len(l:matching_files) > 0 " filename is a diary file if match is found
